@@ -8,6 +8,8 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
+import { DeleteButton } from "@/components/admin/delete-button";
+import { deleteLead } from "@/actions/admin.actions";
 import prisma from "@/lib/prisma";
 import { siteConfig } from "@/config/site";
 import { formatDistanceToNow } from "date-fns";
@@ -42,6 +44,7 @@ export default async function LeadsPage() {
               <TableHead>Origem</TableHead>
               <TableHead>Estágio</TableHead>
               <TableHead>Data</TableHead>
+              <TableHead className="text-right">Ações</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
@@ -59,6 +62,13 @@ export default async function LeadsPage() {
                 <TableCell>{lead.stage?.name ?? lead.status}</TableCell>
                 <TableCell className="text-sm text-muted-foreground">
                   {formatDistanceToNow(lead.createdAt, { addSuffix: true, locale: ptBR })}
+                </TableCell>
+                <TableCell className="text-right">
+                  <DeleteButton
+                    id={lead.id}
+                    label={lead.name}
+                    onDelete={deleteLead}
+                  />
                 </TableCell>
               </TableRow>
             ))}

@@ -4,6 +4,8 @@ import { PageHeader } from "@/components/shared/design-system";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Card } from "@/components/ui/card";
+import { DeleteButton } from "@/components/admin/delete-button";
+import { deleteVideo } from "@/actions/admin.actions";
 import prisma from "@/lib/prisma";
 import { siteConfig } from "@/config/site";
 
@@ -35,11 +37,20 @@ export default async function AdminVideosPage() {
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
         {videos.map((video) => (
           <Card key={video.id} className="border-0 p-4 shadow-sm">
-            <h3 className="font-semibold">{video.title}</h3>
-            <p className="mt-1 truncate text-xs text-muted-foreground">{video.url}</p>
-            <Badge variant="outline" className="mt-2">
-              {video.provider}
-            </Badge>
+            <div className="flex items-start justify-between gap-2">
+              <div className="min-w-0">
+                <h3 className="font-semibold">{video.title}</h3>
+                <p className="mt-1 truncate text-xs text-muted-foreground">{video.url}</p>
+                <Badge variant="outline" className="mt-2">
+                  {video.provider}
+                </Badge>
+              </div>
+              <DeleteButton
+                id={video.id}
+                label={video.title}
+                onDelete={deleteVideo}
+              />
+            </div>
           </Card>
         ))}
         {videos.length === 0 && (

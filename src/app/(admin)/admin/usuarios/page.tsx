@@ -8,6 +8,8 @@ import {
 } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
 import { PageHeader } from "@/components/shared/design-system";
+import { DeleteButton } from "@/components/admin/delete-button";
+import { deleteUser } from "@/actions/admin.actions";
 import prisma from "@/lib/prisma";
 import { siteConfig } from "@/config/site";
 import { USER_ROLES } from "@/constants";
@@ -45,6 +47,7 @@ export default async function UsuariosPage() {
               <TableHead>Perfil</TableHead>
               <TableHead>Status</TableHead>
               <TableHead>CRECI</TableHead>
+              <TableHead className="text-right">Ações</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
@@ -61,6 +64,13 @@ export default async function UsuariosPage() {
                   </Badge>
                 </TableCell>
                 <TableCell>{user.creci ?? "—"}</TableCell>
+                <TableCell className="text-right">
+                  <DeleteButton
+                    id={user.id}
+                    label={user.name}
+                    onDelete={deleteUser}
+                  />
+                </TableCell>
               </TableRow>
             ))}
           </TableBody>

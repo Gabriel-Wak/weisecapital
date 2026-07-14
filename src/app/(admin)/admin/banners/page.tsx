@@ -5,6 +5,8 @@ import { PageHeader } from "@/components/shared/design-system";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Card } from "@/components/ui/card";
+import { DeleteButton } from "@/components/admin/delete-button";
+import { deleteBanner } from "@/actions/admin.actions";
 import prisma from "@/lib/prisma";
 import { siteConfig } from "@/config/site";
 
@@ -44,14 +46,21 @@ export default async function AdminBannersPage() {
                 className="object-cover"
               />
             </div>
-            <div className="p-4">
-              <h3 className="font-semibold">{banner.title}</h3>
-              <div className="mt-2 flex gap-2">
-                <Badge variant="outline">{banner.position}</Badge>
-                <Badge variant={banner.isActive ? "default" : "secondary"}>
-                  {banner.isActive ? "Ativo" : "Inativo"}
-                </Badge>
+            <div className="flex items-start justify-between p-4">
+              <div>
+                <h3 className="font-semibold">{banner.title}</h3>
+                <div className="mt-2 flex gap-2">
+                  <Badge variant="outline">{banner.position}</Badge>
+                  <Badge variant={banner.isActive ? "default" : "secondary"}>
+                    {banner.isActive ? "Ativo" : "Inativo"}
+                  </Badge>
+                </div>
               </div>
+              <DeleteButton
+                id={banner.id}
+                label={banner.title}
+                onDelete={deleteBanner}
+              />
             </div>
           </Card>
         ))}

@@ -22,7 +22,10 @@ import {
 import { CSS } from "@dnd-kit/utilities";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { Trash2 } from "lucide-react";
 import { moveLeadToStage } from "@/actions/crm.actions";
+import { deleteLead } from "@/actions/admin.actions";
 import { toast } from "sonner";
 
 type Lead = {
@@ -40,9 +43,25 @@ type Stage = {
   leads: Lead[];
 };
 
-function SortableLead({ lead }: { lead: Lead }) {
+function SortableLead({ lead, onDeleted }: { lead: Lead; onDeleted: (id: string) => void }) {
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } =
     useSortable({ id: lead.id });
+  const [isDeleting, startDelete] = useTransition();
+
+  function handleDelete(e: React.MouseEvent) {
+    e.stopPropagation();
+    if (!confirm(`Excluir lead "${lead.name}"?`)) return;
+
+    startDelete(async () => {
+      const result = await deleteLead(lead.id);
+      if (result.success) {
+        toast.success("Lead excluído");
+        onDeleted(lead.id);
+      } else {
+        toast.error(result.error);
+      }
+    });
+  }
 
   return (
     <Card
@@ -56,8 +75,18 @@ function SortableLead({ lead }: { lead: Lead }) {
       {...attributes}
       {...listeners}
     >
-      <CardHeader className="p-4 pb-2">
+      <CardHeader className="flex flex-row items-start justify-between gap-2 p-4 pb-2">
         <CardTitle className="text-sm font-medium">{lead.name}</CardTitle>
+        <Button
+          variant="ghost"
+          size="icon"
+          className="h-7 w-7 shrink-0"
+          onClick={handleDelete}
+          onPointerDown={(e) => e.stopPropagation()}
+          disabled={isDeleting}
+        >
+          <Trash2 className="h-3.5 w-3.5 text-destructive" />
+        </Button>
       </CardHeader>
       <CardContent className="p-4 pt-0">
         {lead.phone && (
@@ -74,7 +103,13 @@ function SortableLead({ lead }: { lead: Lead }) {
   );
 }
 
-function StageColumn({ stage }: { stage: Stage }) {
+function StageColumn({
+  stage,
+  onLeadDeleted,
+}: {
+  stage: Stage;
+  onLeadDeleted: (id: string) => void;
+}) {
   const { setNodeRef, isOver } = useDroppable({ id: stage.id });
 
   return (
@@ -98,7 +133,7 @@ function StageColumn({ stage }: { stage: Stage }) {
           }`}
         >
           {stage.leads.map((lead) => (
-            <SortableLead key={lead.id} lead={lead} />
+            <SortableLead key={lead.id} lead={lead} onDeleted={onLeadDeleted} />
           ))}
           {stage.leads.length === 0 && (
             <p className="py-8 text-center text-xs text-muted-foreground">
@@ -176,6 +211,15 @@ export function CrmKanban({ initialStages }: { initialStages: Stage[] }) {
     ? stages.flatMap((s) => s.leads).find((l) => l.id === activeId)
     : null;
 
+  function handleLeadDeleted(leadId: string) {
+    setStages((prev) =>
+      prev.map((stage) => ({
+        ...stage,
+        leads: stage.leads.filter((l) => l.id !== leadId),
+      }))
+    );
+  }
+
   return (
     <DndContext
       sensors={sensors}
@@ -185,7 +229,7 @@ export function CrmKanban({ initialStages }: { initialStages: Stage[] }) {
     >
       <div className="flex gap-4 overflow-x-auto pb-4">
         {stages.map((stage) => (
-          <StageColumn key={stage.id} stage={stage} />
+          <StageColumn key={stage.id} stage={stage} onLeadDeleted={handleLeadDeleted} />
         ))}
       </div>
       <DragOverlay>

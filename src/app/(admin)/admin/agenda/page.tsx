@@ -1,6 +1,8 @@
 import { PageHeader } from "@/components/shared/design-system";
 import { Badge } from "@/components/ui/badge";
 import { Card } from "@/components/ui/card";
+import { DeleteButton } from "@/components/admin/delete-button";
+import { deleteAppointment } from "@/actions/admin.actions";
 import prisma from "@/lib/prisma";
 import { siteConfig } from "@/config/site";
 import { format } from "date-fns";
@@ -46,6 +48,11 @@ export default async function AgendaPage() {
             <Badge variant="outline">
               {format(apt.startAt, "dd MMM yyyy HH:mm", { locale: ptBR })}
             </Badge>
+            <DeleteButton
+              id={apt.id}
+              label={apt.title}
+              onDelete={deleteAppointment}
+            />
           </Card>
         ))}
       </div>

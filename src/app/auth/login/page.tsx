@@ -6,6 +6,7 @@ import { useRouter } from "next/navigation";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { createClient } from "@/lib/supabase/client";
+import { translateAuthError } from "@/lib/auth/sync-user";
 import { loginSchema, type LoginInput } from "@/lib/validators";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -33,7 +34,7 @@ export default function LoginPage() {
       });
 
       if (error) {
-        toast.error("Credenciais inválidas");
+        toast.error(translateAuthError(error.message));
         return;
       }
 
@@ -84,11 +85,8 @@ export default function LoginPage() {
               Esqueceu a senha?
             </Link>
           </p>
-          <p className="text-muted-foreground">
-            Não tem conta?{" "}
-            <Link href="/auth/register" className="font-medium text-primary hover:underline">
-              Cadastre-se
-            </Link>
+          <p className="text-center text-sm text-muted-foreground">
+            Acesso restrito. Usuários são criados pelo administrador.
           </p>
         </div>
       </Card>

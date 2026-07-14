@@ -5,6 +5,7 @@ import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Menu, X, Phone, Heart, GitCompare } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { ThemeToggle } from "@/components/shared/theme-toggle";
 import { publicNav, siteConfig } from "@/config/site";
 import { cn } from "@/lib/utils";
 
@@ -52,6 +53,7 @@ export function Navbar() {
         </div>
 
         <div className="hidden items-center gap-3 lg:flex">
+          <ThemeToggle />
           <Button variant="ghost" size="icon" asChild>
             <Link href="/favoritos" aria-label="Favoritos">
               <Heart className="h-4 w-4" />
@@ -73,13 +75,16 @@ export function Navbar() {
           </Button>
         </div>
 
-        <button
-          className="rounded-lg p-2 lg:hidden"
-          onClick={() => setIsOpen(!isOpen)}
-          aria-label="Menu"
-        >
-          {isOpen ? <X className="h-6 w-6" /> : <Menu className="h-6 w-6" />}
-        </button>
+        <div className="flex items-center gap-1 lg:hidden">
+          <ThemeToggle />
+          <button
+            className="rounded-lg p-2"
+            onClick={() => setIsOpen(!isOpen)}
+            aria-label="Menu"
+          >
+            {isOpen ? <X className="h-6 w-6" /> : <Menu className="h-6 w-6" />}
+          </button>
+        </div>
       </nav>
 
       <AnimatePresence>
@@ -101,6 +106,10 @@ export function Navbar() {
                   {item.title}
                 </Link>
               ))}
+              <div className="mt-2 flex items-center justify-between rounded-lg border px-4 py-3">
+                <span className="text-sm font-medium">Tema</span>
+                <ThemeToggle />
+              </div>
               <Button className="mt-2" asChild>
                 <Link href="/imoveis">Ver Imóveis</Link>
               </Button>

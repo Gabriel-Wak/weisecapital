@@ -2,6 +2,8 @@ import { PageHeader } from "@/components/shared/design-system";
 import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Card } from "@/components/ui/card";
+import { DeleteButton } from "@/components/admin/delete-button";
+import { deleteUser } from "@/actions/admin.actions";
 import prisma from "@/lib/prisma";
 import { siteConfig } from "@/config/site";
 
@@ -26,19 +28,26 @@ export default async function CorretoresPage() {
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
         {brokers.map((broker) => (
           <Card key={broker.id} className="border-0 p-6 shadow-sm">
-            <div className="flex items-center gap-4">
-              <Avatar className="h-12 w-12">
-                <AvatarFallback className="bg-primary text-primary-foreground">
-                  {broker.name.charAt(0)}
-                </AvatarFallback>
-              </Avatar>
-              <div>
-                <h3 className="font-semibold">{broker.name}</h3>
-                <p className="text-sm text-muted-foreground">{broker.email}</p>
-                {broker.creci && (
-                  <p className="text-xs text-muted-foreground">CRECI {broker.creci}</p>
-                )}
+            <div className="flex items-start justify-between gap-2">
+              <div className="flex items-center gap-4">
+                <Avatar className="h-12 w-12">
+                  <AvatarFallback className="bg-primary text-primary-foreground">
+                    {broker.name.charAt(0)}
+                  </AvatarFallback>
+                </Avatar>
+                <div>
+                  <h3 className="font-semibold">{broker.name}</h3>
+                  <p className="text-sm text-muted-foreground">{broker.email}</p>
+                  {broker.creci && (
+                    <p className="text-xs text-muted-foreground">CRECI {broker.creci}</p>
+                  )}
+                </div>
               </div>
+              <DeleteButton
+                id={broker.id}
+                label={broker.name}
+                onDelete={deleteUser}
+              />
             </div>
             <div className="mt-4 flex gap-4">
               <div>

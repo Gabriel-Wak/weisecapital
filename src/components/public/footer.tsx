@@ -1,10 +1,7 @@
 import Link from "next/link";
 import { publicNav, siteConfig } from "@/config/site";
-import { Separator } from "@/components/ui/separator";
 
 export function Footer() {
-  const currentYear = new Date().getFullYear();
-
   return (
     <footer className="border-t bg-muted/30">
       <div className="mx-auto max-w-7xl px-6 py-16 lg:px-8">
@@ -89,17 +86,6 @@ export function Footer() {
               </li>
             </ul>
           </div>
-        </div>
-
-        <Separator className="my-8" />
-
-        <div className="flex flex-col items-center justify-between gap-4 sm:flex-row">
-          <p className="text-sm text-muted-foreground">
-            © {currentYear} {siteConfig.name}. Todos os direitos reservados.
-          </p>
-          <p className="text-xs text-muted-foreground">
-            Desenvolvido com tecnologia de ponta
-          </p>
         </div>
       </div>
     </footer>

@@ -41,7 +41,8 @@ export async function updateSession(
   const isAdminRoute = request.nextUrl.pathname.startsWith("/admin");
   const isAuthRoute =
     request.nextUrl.pathname.startsWith("/auth") &&
-    !request.nextUrl.pathname.startsWith("/auth/callback");
+    !request.nextUrl.pathname.startsWith("/auth/callback") &&
+    !request.nextUrl.pathname.startsWith("/auth/logout");
 
   if (isAdminRoute && !user) {
     const url = request.nextUrl.clone();

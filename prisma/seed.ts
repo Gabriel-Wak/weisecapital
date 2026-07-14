@@ -24,25 +24,13 @@ async function main() {
     },
   });
 
-  const admin = await prisma.user.upsert({
-    where: { email: "admin@weise.com.br" },
-    update: {},
-    create: {
-      supabaseId: "seed-admin-id",
-      email: "admin@weise.com.br",
-      name: "Administrador",
-      role: "ADMIN",
-      tenantId: tenant.id,
-    },
-  });
-
   const broker = await prisma.user.upsert({
-    where: { email: "corretor@weise.com.br" },
+    where: { email: "demo-corretor@seed.local" },
     update: {},
     create: {
       supabaseId: "seed-broker-id",
-      email: "corretor@weise.com.br",
-      name: "Carlos Mendes",
+      email: "demo-corretor@seed.local",
+      name: "Corretor Demo",
       role: "BROKER",
       phone: "(11) 98765-4321",
       creci: "123456-F",
@@ -301,7 +289,7 @@ async function main() {
 
   console.log("✅ Seed completed!");
   console.log(`   Tenant: ${tenant.name}`);
-  console.log(`   Users: ${admin.name}, ${broker.name}`);
+  console.log(`   Users: ${broker.name}`);
   console.log(`   Properties: ${properties.length}`);
 }
 

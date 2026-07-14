@@ -12,7 +12,6 @@ import {
   Calendar,
   BarChart3,
   Settings,
-  LogOut,
   Bell,
 } from "lucide-react";
 import {
@@ -26,6 +25,7 @@ import {
   SidebarMenuButton,
   SidebarMenuItem,
 } from "@/components/ui/sidebar";
+import { AdminSidebarFooter } from "@/components/admin/admin-sidebar-footer";
 import { adminNav } from "@/config/site";
 
 const iconMap: Record<string, React.ComponentType<{ className?: string }>> = {
@@ -75,15 +75,9 @@ export function AdminSidebar() {
           </SidebarGroupContent>
         </SidebarGroup>
         <SidebarGroup>
+          <SidebarGroupLabel>Sistema</SidebarGroupLabel>
           <SidebarGroupContent>
-            <SidebarMenu>
-              <SidebarMenuItem>
-                <SidebarMenuButton render={<Link href="/auth/login" />}>
-                  <LogOut className="h-4 w-4" />
-                  <span>Sair</span>
-                </SidebarMenuButton>
-              </SidebarMenuItem>
-            </SidebarMenu>
+            <AdminSidebarFooter />
           </SidebarGroupContent>
         </SidebarGroup>
       </SidebarContent>

@@ -11,7 +11,8 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { DeleteBlogButton } from "@/components/admin/delete-blog-button";
+import { DeleteButton } from "@/components/admin/delete-button";
+import { deleteBlogPost } from "@/actions/content.actions";
 import prisma from "@/lib/prisma";
 import { siteConfig } from "@/config/site";
 
@@ -61,7 +62,11 @@ export default async function AdminBlogPage() {
                 </TableCell>
                 <TableCell>{post.views}</TableCell>
                 <TableCell className="text-right">
-                  <DeleteBlogButton id={post.id} />
+                  <DeleteButton
+                    id={post.id}
+                    label={post.title}
+                    onDelete={deleteBlogPost}
+                  />
                 </TableCell>
               </TableRow>
             ))}

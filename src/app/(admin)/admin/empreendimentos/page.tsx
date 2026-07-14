@@ -4,6 +4,8 @@ import { PageHeader } from "@/components/shared/design-system";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Card } from "@/components/ui/card";
+import { DeleteButton } from "@/components/admin/delete-button";
+import { deleteDevelopment } from "@/actions/admin.actions";
 import { developmentRepository } from "@/repositories/development.repository";
 import { formatCurrency } from "@/lib/utils/format";
 import prisma from "@/lib/prisma";
@@ -40,21 +42,30 @@ export default async function AdminEmpreendimentosPage() {
       <div className="grid gap-4 md:grid-cols-2">
         {result.data.map((dev) => (
           <Card key={dev.id} className="border-0 p-6 shadow-sm">
-            <Badge variant="outline" className="mb-2">
-              {dev.status}
-            </Badge>
-            <h3 className="text-lg font-semibold">{dev.name}</h3>
-            <p className="text-sm text-muted-foreground">
-              {dev.neighborhood}, {dev.city}
-            </p>
-            {dev.minPrice && (
-              <p className="mt-2 font-medium text-primary">
-                A partir de {formatCurrency(dev.minPrice)}
-              </p>
-            )}
-            <p className="mt-2 text-xs text-muted-foreground">
-              {dev._count?.properties ?? 0} unidades vinculadas
-            </p>
+            <div className="flex items-start justify-between gap-2">
+              <div>
+                <Badge variant="outline" className="mb-2">
+                  {dev.status}
+                </Badge>
+                <h3 className="text-lg font-semibold">{dev.name}</h3>
+                <p className="text-sm text-muted-foreground">
+                  {dev.neighborhood}, {dev.city}
+                </p>
+                {dev.minPrice && (
+                  <p className="mt-2 font-medium text-primary">
+                    A partir de {formatCurrency(dev.minPrice)}
+                  </p>
+                )}
+                <p className="mt-2 text-xs text-muted-foreground">
+                  {dev._count?.properties ?? 0} unidades vinculadas
+                </p>
+              </div>
+              <DeleteButton
+                id={dev.id}
+                label={dev.name}
+                onDelete={deleteDevelopment}
+              />
+            </div>
           </Card>
         ))}
       </div>
