@@ -1,0 +1,615 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
+}
+
+// ─── Enums ───────────────────────────────────────────────────────────────────
+
+enum UserRole {
+  ADMIN
+  MANAGER
+  BROKER
+  EDITOR
+}
+
+enum PropertyType {
+  APARTMENT
+  HOUSE
+  PENTHOUSE
+  STUDIO
+  LOFT
+  COMMERCIAL
+  LAND
+  FARM
+  WAREHOUSE
+}
+
+enum PropertyPurpose {
+  SALE
+  RENT
+  BOTH
+}
+
+enum PropertyStatus {
+  AVAILABLE
+  RESERVED
+  SOLD
+  RENTED
+  UNAVAILABLE
+}
+
+enum DevelopmentStatus {
+  PLANNING
+  CONSTRUCTION
+  READY
+  DELIVERED
+}
+
+enum LeadStatus {
+  NEW
+  CONTACTED
+  QUALIFIED
+  NEGOTIATION
+  WON
+  LOST
+}
+
+enum LeadSource {
+  WEBSITE
+  WHATSAPP
+  PHONE
+  REFERRAL
+  SOCIAL_MEDIA
+  PORTAL
+  OTHER
+}
+
+enum MediaType {
+  IMAGE
+  VIDEO
+  DOCUMENT
+}
+
+enum BannerPosition {
+  HOME_HERO
+  HOME_MIDDLE
+  LISTING
+  SIDEBAR
+}
+
+enum NotificationType {
+  SYSTEM
+  EMAIL
+  WHATSAPP
+}
+
+enum AuditAction {
+  CREATE
+  UPDATE
+  DELETE
+  RESTORE
+  LOGIN
+  LOGOUT
+}
+
+// ─── White Label / Tenant ────────────────────────────────────────────────────
+
+model Tenant {
+  id          String   @id @default(cuid())
+  name        String
+  slug        String   @unique
+  domain      String?  @unique
+  logo        String?
+  favicon     String?
+  primaryColor    String   @default("#0f172a")
+  secondaryColor  String   @default("#3b82f6")
+  accentColor     String   @default("#10b981")
+  phone       String?
+  whatsapp    String?
+  email       String?
+  address     String?
+  city        String?
+  state       String?
+  zipCode     String?
+  cnpj        String?
+  description String?  @db.Text
+  facebook    String?
+  instagram   String?
+  linkedin    String?
+  youtube     String?
+  googleAnalytics String?
+  metaPixel   String?
+  googleTagManager String?
+  maintenanceMode Boolean  @default(false)
+  isActive    Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  deletedAt   DateTime?
+
+  users         User[]
+  properties    Property[]
+  developments  Development[]
+  blogPosts     BlogPost[]
+  banners       Banner[]
+  videos        Video[]
+  leads         Lead[]
+  clients       Client[]
+  testimonials  Testimonial[]
+  partners      Partner[]
+  notifications Notification[]
+  auditLogs     AuditLog[]
+  pipelineStages PipelineStage[]
+
+  @@map("tenants")
+}
+
+// ─── Users & RBAC ────────────────────────────────────────────────────────────
+
+model User {
+  id            String    @id @default(cuid())
+  supabaseId    String    @unique
+  email         String    @unique
+  name          String
+  phone         String?
+  avatar        String?
+  role          UserRole  @default(BROKER)
+  creci         String?
+  bio           String?   @db.Text
+  isActive      Boolean   @default(true)
+  tenantId      String
+  tenant        Tenant    @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+  deletedAt     DateTime?
+
+  properties    Property[]     @relation("BrokerProperties")
+  leads         Lead[]         @relation("BrokerLeads")
+  appointments  Appointment[]
+  auditLogs     AuditLog[]
+  notifications Notification[]
+
+  @@index([tenantId])
+  @@index([role])
+  @@map("users")
+}
+
+// ─── Properties ──────────────────────────────────────────────────────────────
+
+model Property {
+  id              String          @id @default(cuid())
+  code            String
+  title           String
+  slug            String
+  description     String?         @db.Text
+  type            PropertyType
+  purpose         PropertyPurpose
+  status          PropertyStatus  @default(AVAILABLE)
+  price           Decimal         @db.Decimal(12, 2)
+  rentPrice       Decimal?        @db.Decimal(12, 2)
+  condoFee        Decimal?        @db.Decimal(10, 2)
+  iptu            Decimal?        @db.Decimal(10, 2)
+  bedrooms        Int             @default(0)
+  suites          Int             @default(0)
+  bathrooms       Int             @default(0)
+  parkingSpaces   Int             @default(0)
+  area            Decimal?        @db.Decimal(10, 2)
+  builtArea       Decimal?        @db.Decimal(10, 2)
+  hasPool         Boolean         @default(false)
+  isFeatured      Boolean         @default(false)
+  isLaunch        Boolean         @default(false)
+  city            String
+  neighborhood    String
+  condominium     String?
+  address         String?
+  latitude        Decimal?        @db.Decimal(10, 7)
+  longitude       Decimal?        @db.Decimal(10, 7)
+  zipCode         String?
+  state           String?
+  videoUrl        String?
+  virtualTourUrl  String?
+  seoTitle        String?
+  seoDescription  String?
+  seoKeywords     String?
+  views           Int             @default(0)
+  tenantId        String
+  tenant          Tenant          @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  brokerId        String?
+  broker          User?           @relation("BrokerProperties", fields: [brokerId], references: [id])
+  developmentId   String?
+  development     Development?    @relation(fields: [developmentId], references: [id])
+  categoryId      String?
+  category        Category?       @relation(fields: [categoryId], references: [id])
+  createdAt       DateTime        @default(now())
+  updatedAt       DateTime        @updatedAt
+  deletedAt       DateTime?
+
+  media           Media[]
+  features        PropertyFeature[]
+  leads           Lead[]
+
+  @@unique([tenantId, slug])
+  @@unique([tenantId, code])
+  @@index([tenantId, status])
+  @@index([tenantId, purpose])
+  @@index([tenantId, city])
+  @@index([tenantId, neighborhood])
+  @@index([tenantId, price])
+  @@map("properties")
+}
+
+model PropertyFeature {
+  id         String   @id @default(cuid())
+  name       String
+  value      String?
+  propertyId String
+  property   Property @relation(fields: [propertyId], references: [id], onDelete: Cascade)
+
+  @@map("property_features")
+}
+
+model Category {
+  id          String     @id @default(cuid())
+  name        String
+  slug        String     @unique
+  description String?
+  properties  Property[]
+  createdAt   DateTime   @default(now())
+  updatedAt   DateTime   @updatedAt
+  deletedAt   DateTime?
+
+  @@map("categories")
+}
+
+// ─── Developments ────────────────────────────────────────────────────────────
+
+model Development {
+  id              String            @id @default(cuid())
+  name            String
+  slug            String
+  description     String?           @db.Text
+  status          DevelopmentStatus @default(PLANNING)
+  builder         String?
+  city            String
+  neighborhood    String
+  address         String?
+  latitude        Decimal?          @db.Decimal(10, 7)
+  longitude       Decimal?          @db.Decimal(10, 7)
+  minPrice        Decimal?          @db.Decimal(12, 2)
+  maxPrice        Decimal?          @db.Decimal(12, 2)
+  totalUnits      Int?
+  deliveryDate    DateTime?
+  videoUrl        String?
+  seoTitle        String?
+  seoDescription  String?
+  isFeatured      Boolean           @default(false)
+  tenantId        String
+  tenant          Tenant            @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  createdAt       DateTime          @default(now())
+  updatedAt       DateTime          @updatedAt
+  deletedAt       DateTime?
+
+  properties      Property[]
+  media           Media[]
+  features        DevelopmentFeature[]
+
+  @@unique([tenantId, slug])
+  @@index([tenantId, status])
+  @@map("developments")
+}
+
+model DevelopmentFeature {
+  id            String      @id @default(cuid())
+  name          String
+  value         String?
+  developmentId String
+  development   Development @relation(fields: [developmentId], references: [id], onDelete: Cascade)
+
+  @@map("development_features")
+}
+
+// ─── Media ───────────────────────────────────────────────────────────────────
+
+model Media {
+  id            String       @id @default(cuid())
+  url           String
+  thumbnailUrl  String?
+  alt           String?
+  type          MediaType    @default(IMAGE)
+  mimeType      String?
+  size          Int?
+  width         Int?
+  height        Int?
+  order         Int          @default(0)
+  propertyId    String?
+  property      Property?    @relation(fields: [propertyId], references: [id], onDelete: Cascade)
+  developmentId String?
+  development   Development? @relation(fields: [developmentId], references: [id], onDelete: Cascade)
+  blogPostId    String?
+  blogPost      BlogPost?    @relation(fields: [blogPostId], references: [id], onDelete: Cascade)
+  createdAt     DateTime     @default(now())
+
+  @@index([propertyId])
+  @@index([developmentId])
+  @@map("media")
+}
+
+// ─── Blog ────────────────────────────────────────────────────────────────────
+
+model BlogPost {
+  id              String         @id @default(cuid())
+  title           String
+  slug            String
+  excerpt         String?
+  content         String         @db.Text
+  featuredImage   String?
+  isPublished     Boolean        @default(false)
+  publishedAt     DateTime?
+  seoTitle        String?
+  seoDescription  String?
+  views           Int            @default(0)
+  tenantId        String
+  tenant          Tenant         @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  categoryId      String?
+  category        BlogCategory?  @relation(fields: [categoryId], references: [id])
+  createdAt       DateTime       @default(now())
+  updatedAt       DateTime       @updatedAt
+  deletedAt       DateTime?
+
+  media           Media[]
+  tags            BlogPostTag[]
+
+  @@unique([tenantId, slug])
+  @@index([tenantId, isPublished])
+  @@map("blog_posts")
+}
+
+model BlogCategory {
+  id        String     @id @default(cuid())
+  name      String
+  slug      String     @unique
+  posts     BlogPost[]
+  createdAt DateTime   @default(now())
+  updatedAt DateTime   @updatedAt
+
+  @@map("blog_categories")
+}
+
+model BlogTag {
+  id        String        @id @default(cuid())
+  name      String
+  slug      String        @unique
+  posts     BlogPostTag[]
+  createdAt DateTime      @default(now())
+
+  @@map("blog_tags")
+}
+
+model BlogPostTag {
+  postId String
+  tagId  String
+  post   BlogPost @relation(fields: [postId], references: [id], onDelete: Cascade)
+  tag    BlogTag  @relation(fields: [tagId], references: [id], onDelete: Cascade)
+
+  @@id([postId, tagId])
+  @@map("blog_post_tags")
+}
+
+// ─── Banners & Videos ────────────────────────────────────────────────────────
+
+model Banner {
+  id          String         @id @default(cuid())
+  title       String
+  subtitle    String?
+  imageDesktop String
+  imageTablet  String?
+  imageMobile  String?
+  ctaText     String?
+  ctaLink     String?
+  position    BannerPosition @default(HOME_HERO)
+  order       Int            @default(0)
+  isActive    Boolean        @default(true)
+  tenantId    String
+  tenant      Tenant         @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  createdAt   DateTime       @default(now())
+  updatedAt   DateTime       @updatedAt
+  deletedAt   DateTime?
+
+  @@index([tenantId, position])
+  @@map("banners")
+}
+
+model Video {
+  id          String   @id @default(cuid())
+  title       String
+  description String?
+  url         String
+  provider    String   @default("youtube")
+  thumbnail   String?
+  order       Int      @default(0)
+  isActive    Boolean  @default(true)
+  tenantId    String
+  tenant      Tenant   @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  deletedAt   DateTime?
+
+  @@index([tenantId])
+  @@map("videos")
+}
+
+// ─── CRM ─────────────────────────────────────────────────────────────────────
+
+model PipelineStage {
+  id        String   @id @default(cuid())
+  name      String
+  color     String   @default("#3b82f6")
+  order     Int      @default(0)
+  tenantId  String
+  tenant    Tenant   @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  leads     Lead[]
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([tenantId])
+  @@map("pipeline_stages")
+}
+
+model Lead {
+  id          String      @id @default(cuid())
+  name        String
+  email       String?
+  phone       String?
+  message     String?     @db.Text
+  status      LeadStatus  @default(NEW)
+  source      LeadSource  @default(WEBSITE)
+  tags        String[]
+  notes       String?     @db.Text
+  tenantId    String
+  tenant      Tenant      @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  brokerId    String?
+  broker      User?       @relation("BrokerLeads", fields: [brokerId], references: [id])
+  propertyId  String?
+  property    Property?   @relation(fields: [propertyId], references: [id])
+  stageId     String?
+  stage       PipelineStage? @relation(fields: [stageId], references: [id])
+  clientId    String?
+  client      Client?     @relation(fields: [clientId], references: [id])
+  createdAt   DateTime    @default(now())
+  updatedAt   DateTime    @updatedAt
+  deletedAt   DateTime?
+
+  history     LeadHistory[]
+
+  @@index([tenantId, status])
+  @@index([tenantId, stageId])
+  @@map("leads")
+}
+
+model LeadHistory {
+  id        String   @id @default(cuid())
+  action    String
+  details   String?  @db.Text
+  leadId    String
+  lead      Lead     @relation(fields: [leadId], references: [id], onDelete: Cascade)
+  createdAt DateTime @default(now())
+
+  @@index([leadId])
+  @@map("lead_history")
+}
+
+model Client {
+  id        String   @id @default(cuid())
+  name      String
+  email     String?
+  phone     String?
+  cpf       String?
+  notes     String?  @db.Text
+  tenantId  String
+  tenant    Tenant   @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  deletedAt DateTime?
+
+  leads         Lead[]
+  appointments  Appointment[]
+
+  @@index([tenantId])
+  @@map("clients")
+}
+
+model Appointment {
+  id          String   @id @default(cuid())
+  title       String
+  description String?
+  startAt     DateTime
+  endAt       DateTime
+  location    String?
+  brokerId    String
+  broker      User     @relation(fields: [brokerId], references: [id])
+  clientId    String?
+  client      Client?  @relation(fields: [clientId], references: [id])
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@index([brokerId, startAt])
+  @@map("appointments")
+}
+
+// ─── Content ─────────────────────────────────────────────────────────────────
+
+model Testimonial {
+  id        String   @id @default(cuid())
+  name      String
+  role      String?
+  content   String   @db.Text
+  avatar    String?
+  rating    Int      @default(5)
+  isActive  Boolean  @default(true)
+  order     Int      @default(0)
+  tenantId  String
+  tenant    Tenant   @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([tenantId])
+  @@map("testimonials")
+}
+
+model Partner {
+  id        String   @id @default(cuid())
+  name      String
+  logo      String
+  url       String?
+  order     Int      @default(0)
+  isActive  Boolean  @default(true)
+  tenantId  String
+  tenant    Tenant   @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([tenantId])
+  @@map("partners")
+}
+
+// ─── Notifications & Audit ───────────────────────────────────────────────────
+
+model Notification {
+  id        String           @id @default(cuid())
+  title     String
+  message   String
+  type      NotificationType @default(SYSTEM)
+  isRead    Boolean          @default(false)
+  link      String?
+  tenantId  String
+  tenant    Tenant           @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  userId    String?
+  user      User?            @relation(fields: [userId], references: [id])
+  createdAt DateTime         @default(now())
+
+  @@index([userId, isRead])
+  @@map("notifications")
+}
+
+model AuditLog {
+  id        String      @id @default(cuid())
+  action    AuditAction
+  entity    String
+  entityId  String
+  details   Json?
+  ip        String?
+  userAgent String?
+  tenantId  String
+  tenant    Tenant      @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  userId    String?
+  user      User?       @relation(fields: [userId], references: [id])
+  createdAt DateTime    @default(now())
+
+  @@index([tenantId, entity])
+  @@index([userId])
+  @@map("audit_logs")
+}
