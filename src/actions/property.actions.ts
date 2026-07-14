@@ -8,18 +8,29 @@ import { propertyFormSchema } from "@/lib/validators";
 import prisma from "@/lib/prisma";
 import type { ActionResult } from "@/types";
 
+function formatPropertyError(error: unknown): string {
+  const message = error instanceof Error ? error.message : "Erro desconhecido";
+
+  if (message.includes("numeric field overflow")) {
+    return "Preço ou locação muito alto. Use só números, sem pontos ou vírgulas (ex: 2500000 para R$ 2,5 mi).";
+  }
+
+  return message;
+}
+
 function parsePropertyForm(raw: Record<string, FormDataEntryValue>) {
   return propertyFormSchema.safeParse({
     ...raw,
-    price: Number(raw.price),
-    rentPrice: raw.rentPrice ? Number(raw.rentPrice) : undefined,
-    condoFee: raw.condoFee ? Number(raw.condoFee) : undefined,
-    iptu: raw.iptu ? Number(raw.iptu) : undefined,
-    area: raw.area ? Number(raw.area) : undefined,
-    bedrooms: Number(raw.bedrooms ?? 0),
-    suites: Number(raw.suites ?? 0),
-    bathrooms: Number(raw.bathrooms ?? 0),
-    parkingSpaces: Number(raw.parkingSpaces ?? 0),
+    price: raw.price,
+    rentPrice: raw.rentPrice,
+    condoFee: raw.condoFee,
+    iptu: raw.iptu,
+    area: raw.area,
+    builtArea: raw.builtArea,
+    bedrooms: raw.bedrooms ?? 0,
+    suites: raw.suites ?? 0,
+    bathrooms: raw.bathrooms ?? 0,
+    parkingSpaces: raw.parkingSpaces ?? 0,
     hasPool: raw.hasPool === "true",
     isFeatured: raw.isFeatured === "true",
     isLaunch: raw.isLaunch === "true",
@@ -84,7 +95,7 @@ export async function createProperty(
   } catch (error) {
     return {
       success: false,
-      error: error instanceof Error ? error.message : "Erro ao criar imóvel",
+      error: formatPropertyError(error),
     };
   }
 }
@@ -147,7 +158,7 @@ export async function updateProperty(
   } catch (error) {
     return {
       success: false,
-      error: error instanceof Error ? error.message : "Erro ao atualizar",
+      error: formatPropertyError(error),
     };
   }
 }

@@ -51,6 +51,9 @@ export function translateAuthError(message: string): string {
   if (lower.includes("signup is disabled")) {
     return "Cadastro desabilitado no Supabase. Crie o usuário pelo painel do Supabase.";
   }
+  if (lower.includes("email logins are disabled")) {
+    return "Login por e-mail desativado no Supabase. Ative em Authentication → Providers → Email.";
+  }
 
   return message;
 }

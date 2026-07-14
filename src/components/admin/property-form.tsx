@@ -123,9 +123,8 @@ export function PropertyForm({ property }: PropertyFormProps) {
   function onSubmit(data: PropertyFormInput) {
     const formData = new FormData();
     Object.entries(data).forEach(([key, value]) => {
-      if (value !== undefined && value !== null) {
-        formData.append(key, String(value));
-      }
+      if (value === undefined || value === null || value === "") return;
+      formData.append(key, String(value));
     });
     imageUrls.forEach((url) => formData.append("imageUrls", url));
 
@@ -279,11 +278,34 @@ export function PropertyForm({ property }: PropertyFormProps) {
             <div className="grid gap-4 sm:grid-cols-2">
               <div className="space-y-2">
                 <Label>Preço (R$)</Label>
-                <Input type="number" {...register("price")} />
+                <Input
+                  type="number"
+                  min={0}
+                  max={9999999999}
+                  step={1}
+                  placeholder="2500000"
+                  {...register("price")}
+                />
+                <p className="text-xs text-muted-foreground">
+                  Apenas números, sem pontos (ex: 2500000 = R$ 2,5 mi)
+                </p>
+                {errors.price && (
+                  <p className="text-sm text-destructive">{errors.price.message}</p>
+                )}
               </div>
               <div className="space-y-2">
                 <Label>Locação (R$)</Label>
-                <Input type="number" {...register("rentPrice")} />
+                <Input
+                  type="number"
+                  min={0}
+                  max={9999999999}
+                  step={1}
+                  placeholder="8500"
+                  {...register("rentPrice")}
+                />
+                {errors.rentPrice && (
+                  <p className="text-sm text-destructive">{errors.rentPrice.message}</p>
+                )}
               </div>
               <div className="space-y-2">
                 <Label>Dormitórios</Label>

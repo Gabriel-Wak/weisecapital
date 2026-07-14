@@ -39,6 +39,27 @@ export const propertySearchSchema = z.object({
   sortOrder: z.enum(["asc", "desc"]).default("desc"),
 });
 
+const MAX_PROPERTY_PRICE = 9_999_999_999.99;
+const MAX_PROPERTY_AREA = 99_999_999.99;
+
+function emptyToUndefined(value: unknown) {
+  if (value === "" || value === null || value === undefined) return undefined;
+  return value;
+}
+
+const moneyField = (label: string) =>
+  z.preprocess(
+    emptyToUndefined,
+    z.coerce
+      .number()
+      .min(0, `${label} inválido`)
+      .max(
+        MAX_PROPERTY_PRICE,
+        `${label} muito alto. Máximo: R$ 9.999.999.999,99`
+      )
+      .optional()
+  );
+
 export const propertyFormSchema = z.object({
   code: z.string().min(1, "Código obrigatório"),
   title: z.string().min(3, "Título deve ter no mínimo 3 caracteres"),
@@ -58,16 +79,36 @@ export const propertyFormSchema = z.object({
   status: z
     .enum(["AVAILABLE", "RESERVED", "SOLD", "RENTED", "UNAVAILABLE"])
     .default("AVAILABLE"),
-  price: z.coerce.number().min(0),
-  rentPrice: z.coerce.number().optional(),
-  condoFee: z.coerce.number().optional(),
-  iptu: z.coerce.number().optional(),
+  price: z.coerce
+    .number({ error: "Preço obrigatório" })
+    .min(0, "Preço inválido")
+    .max(
+      MAX_PROPERTY_PRICE,
+      "Preço muito alto. Máximo: R$ 9.999.999.999,99"
+    ),
+  rentPrice: moneyField("Locação"),
+  condoFee: moneyField("Condomínio"),
+  iptu: moneyField("IPTU"),
   bedrooms: z.coerce.number().min(0).default(0),
   suites: z.coerce.number().min(0).default(0),
   bathrooms: z.coerce.number().min(0).default(0),
   parkingSpaces: z.coerce.number().min(0).default(0),
-  area: z.coerce.number().optional(),
-  builtArea: z.coerce.number().optional(),
+  area: z.preprocess(
+    emptyToUndefined,
+    z.coerce
+      .number()
+      .min(0)
+      .max(MAX_PROPERTY_AREA, "Área muito grande")
+      .optional()
+  ),
+  builtArea: z.preprocess(
+    emptyToUndefined,
+    z.coerce
+      .number()
+      .min(0)
+      .max(MAX_PROPERTY_AREA, "Área construída muito grande")
+      .optional()
+  ),
   hasPool: z.boolean().default(false),
   isFeatured: z.boolean().default(false),
   isLaunch: z.boolean().default(false),

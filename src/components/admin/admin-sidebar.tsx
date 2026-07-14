@@ -25,7 +25,6 @@ import {
   SidebarMenuButton,
   SidebarMenuItem,
 } from "@/components/ui/sidebar";
-import { AdminSidebarFooter } from "@/components/admin/admin-sidebar-footer";
 import { adminNav } from "@/config/site";
 
 const iconMap: Record<string, React.ComponentType<{ className?: string }>> = {
@@ -72,12 +71,6 @@ export function AdminSidebar() {
                 );
               })}
             </SidebarMenu>
-          </SidebarGroupContent>
-        </SidebarGroup>
-        <SidebarGroup>
-          <SidebarGroupLabel>Sistema</SidebarGroupLabel>
-          <SidebarGroupContent>
-            <AdminSidebarFooter />
           </SidebarGroupContent>
         </SidebarGroup>
       </SidebarContent>
