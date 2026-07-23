@@ -3,12 +3,12 @@
 import { useEffect, useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
-import { motion, AnimatePresence } from "framer-motion";
 import { ArrowRight, MessageCircle, ChevronLeft, ChevronRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { PropertySearch } from "./property-search";
 import { siteConfig } from "@/config/site";
 import { getWhatsAppLink } from "@/lib/utils/format";
+import { cn } from "@/lib/utils";
 
 export type HeroBannerData = {
   id: string;
@@ -24,14 +24,14 @@ export type HeroBannerData = {
 export function HeroSection({ banners = [] }: { banners?: HeroBannerData[] }) {
   const [index, setIndex] = useState(0);
   const hasBanners = banners.length > 0;
-  const current = hasBanners ? banners[index] : null;
+  const current = hasBanners ? banners[index]! : null;
 
   useEffect(() => {
     if (banners.length < 2) return;
-    const id = setInterval(() => {
+    const id = window.setInterval(() => {
       setIndex((i) => (i + 1) % banners.length);
-    }, 6000);
-    return () => clearInterval(id);
+    }, 7000);
+    return () => window.clearInterval(id);
   }, [banners.length]);
 
   const whatsappHref = getWhatsAppLink(
@@ -43,8 +43,10 @@ export function HeroSection({ banners = [] }: { banners?: HeroBannerData[] }) {
     current?.title ??
     "Imóveis bem localizados, com atendimento que fecha negócio.";
   const subtitle =
-    current?.subtitle ??
-    "Venda e locação para famílias e investidores. Curadoria clara, resposta rápida no WhatsApp e acompanhamento até a assinatura.";
+    current?.subtitle?.trim() ||
+    (current
+      ? null
+      : "Venda e locação para famílias e investidores. Curadoria clara, resposta rápida no WhatsApp e acompanhamento até a assinatura.");
 
   function go(delta: number) {
     if (!banners.length) return;
@@ -53,35 +55,32 @@ export function HeroSection({ banners = [] }: { banners?: HeroBannerData[] }) {
 
   return (
     <section className="relative flex min-h-[92vh] items-end overflow-hidden md:min-h-screen md:items-center">
-      {/* Background: banner image or navy fallback */}
-      <div className="absolute inset-0 bg-[linear-gradient(165deg,#0B1F3A_0%,#132a4a_42%,#1a3558_100%)]" />
+      <div className="absolute inset-0 bg-[#0B1F3A]" />
 
-      <AnimatePresence mode="wait">
-        {current && (
-          <motion.div
-            key={current.id}
-            className="absolute inset-0"
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            transition={{ duration: 0.7, ease: [0.22, 1, 0.36, 1] }}
-          >
-            <Image
-              src={current.imageDesktop}
-              alt={current.title}
-              fill
-              priority
-              className="object-cover"
-              sizes="100vw"
-            />
-            <div className="absolute inset-0 bg-gradient-to-r from-[#0B1F3A]/90 via-[#0B1F3A]/65 to-[#0B1F3A]/35" />
-            <div className="absolute inset-0 bg-gradient-to-t from-[#0B1F3A]/80 via-transparent to-[#0B1F3A]/30" />
-          </motion.div>
-        )}
-      </AnimatePresence>
+      {/* Todas as imagens no DOM — troca por opacity, sem sumir o conteúdo */}
+      {banners.map((banner, i) => (
+        <div
+          key={banner.id}
+          className={cn(
+            "absolute inset-0 transition-opacity duration-700 ease-out",
+            i === index ? "opacity-100" : "pointer-events-none opacity-0"
+          )}
+          aria-hidden={i !== index}
+        >
+          <Image
+            src={banner.imageDesktop}
+            alt={banner.title}
+            fill
+            priority={i === 0}
+            className="object-cover"
+            sizes="100vw"
+          />
+        </div>
+      ))}
 
       {!hasBanners && (
         <>
+          <div className="absolute inset-0 bg-[linear-gradient(165deg,#0B1F3A_0%,#132a4a_42%,#1a3558_100%)]" />
           <div
             className="absolute inset-0 opacity-[0.07]"
             style={{
@@ -90,45 +89,36 @@ export function HeroSection({ banners = [] }: { banners?: HeroBannerData[] }) {
               backgroundSize: "64px 64px",
             }}
           />
-          <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_70%_20%,rgba(255,255,255,0.12),transparent_55%)]" />
         </>
       )}
 
+      {/* Overlay mais leve para a foto do banner aparecer */}
+      <div
+        className={cn(
+          "absolute inset-0",
+          hasBanners
+            ? "bg-gradient-to-r from-[#0B1F3A]/75 via-[#0B1F3A]/45 to-[#0B1F3A]/25"
+            : "bg-[radial-gradient(ellipse_at_70%_20%,rgba(255,255,255,0.12),transparent_55%)]"
+        )}
+      />
+      {hasBanners && (
+        <div className="absolute inset-0 bg-gradient-to-t from-[#0B1F3A]/70 via-transparent to-[#0B1F3A]/25" />
+      )}
+
       <div className="relative z-10 mx-auto w-full max-w-7xl px-5 pt-28 pb-16 md:px-8 md:pt-32 md:pb-24">
-        <motion.p
-          className="mb-4 text-xs font-semibold tracking-[0.22em] text-white/70 uppercase"
-          initial={{ opacity: 0, y: 16 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.55, ease: [0.22, 1, 0.36, 1] }}
-        >
+        <p className="mb-4 text-xs font-semibold tracking-[0.22em] text-white/70 uppercase">
           Weise Capital · Imobiliária
-        </motion.p>
+        </p>
 
-        <AnimatePresence mode="wait">
-          <motion.h1
-            key={current?.id ?? "default-title"}
-            className="font-heading max-w-3xl text-4xl font-semibold tracking-tight text-white sm:text-5xl md:text-6xl lg:text-[3.75rem] lg:leading-[1.08]"
-            initial={{ opacity: 0, y: 16 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: -8 }}
-            transition={{ duration: 0.45, ease: [0.22, 1, 0.36, 1] }}
-          >
-            {title}
-          </motion.h1>
-        </AnimatePresence>
+        <h1 className="font-heading max-w-3xl text-4xl font-semibold tracking-tight text-white sm:text-5xl md:text-6xl lg:text-[3.75rem] lg:leading-[1.08]">
+          {title}
+        </h1>
 
-        <AnimatePresence mode="wait">
-          <motion.p
-            key={(current?.id ?? "default") + "-sub"}
-            className="mt-5 max-w-xl text-base leading-relaxed text-white/75 md:text-lg"
-            initial={{ opacity: 0, y: 12 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0 }}
-            transition={{ duration: 0.4 }}
-          >
+        {subtitle && (
+          <p className="mt-5 max-w-xl text-base leading-relaxed text-white/80 md:text-lg">
             {subtitle}
-          </motion.p>
-        </AnimatePresence>
+          </p>
+        )}
 
         <div className="mt-8 flex flex-wrap items-center gap-3">
           {current?.ctaText && current?.ctaLink ? (
@@ -183,9 +173,10 @@ export function HeroSection({ banners = [] }: { banners?: HeroBannerData[] }) {
                   key={b.id}
                   type="button"
                   onClick={() => setIndex(i)}
-                  className={`h-1.5 rounded-full transition-all ${
+                  className={cn(
+                    "h-1.5 rounded-full transition-all",
                     i === index ? "w-6 bg-white" : "w-1.5 bg-white/40"
-                  }`}
+                  )}
                   aria-label={`Ir para banner ${i + 1}`}
                 />
               ))}
