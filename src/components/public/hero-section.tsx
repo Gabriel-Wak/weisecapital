@@ -72,6 +72,7 @@ export function HeroSection({ banners = [] }: { banners?: HeroBannerData[] }) {
             alt={banner.title}
             fill
             priority={i === 0}
+            unoptimized
             className="object-cover"
             sizes="100vw"
           />
