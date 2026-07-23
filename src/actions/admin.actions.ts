@@ -58,6 +58,7 @@ export async function deleteBanner(id: string): Promise<ActionResult> {
 
     await auditDelete(session, "Banner", id);
     revalidatePath("/admin/banners");
+    revalidatePath("/");
     return { success: true, data: undefined };
   } catch (error) {
     return {

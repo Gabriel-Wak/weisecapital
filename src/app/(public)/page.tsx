@@ -24,7 +24,7 @@ async function getHomeData() {
 
   if (!tenant) return null;
 
-  const [featured, launches, developments, testimonials, propertyCount] =
+  const [featured, launches, developments, testimonials, propertyCount, banners] =
     await Promise.all([
       propertyService.getFeatured(tenantSlug),
       propertyService.getLaunches(tenantSlug),
@@ -37,9 +37,28 @@ async function getHomeData() {
       prisma.property.count({
         where: { tenantId: tenant.id, deletedAt: null, status: "AVAILABLE" },
       }),
+      prisma.banner.findMany({
+        where: {
+          tenantId: tenant.id,
+          deletedAt: null,
+          isActive: true,
+          position: "HOME_HERO",
+        },
+        orderBy: { order: "asc" },
+        select: {
+          id: true,
+          title: true,
+          subtitle: true,
+          imageDesktop: true,
+          imageTablet: true,
+          imageMobile: true,
+          ctaText: true,
+          ctaLink: true,
+        },
+      }),
     ]);
 
-  return { featured, launches, developments, testimonials, propertyCount };
+  return { featured, launches, developments, testimonials, propertyCount, banners };
 }
 
 export default async function HomePage() {
@@ -58,7 +77,7 @@ export default async function HomePage() {
         }}
       />
 
-      <HeroSection />
+      <HeroSection banners={data?.banners ?? []} />
 
       {/* Proof strip — only real catalog count */}
       <section className="border-b bg-card">

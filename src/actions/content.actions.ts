@@ -70,6 +70,7 @@ export async function createBanner(formData: FormData): Promise<ActionResult<{ i
     });
 
     revalidatePath("/admin/banners");
+    revalidatePath("/");
     return { success: true, data: { id: banner.id } };
   } catch (error) {
     return { success: false, error: error instanceof Error ? error.message : "Erro" };
