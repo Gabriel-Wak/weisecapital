@@ -42,7 +42,7 @@ export function PropertySearch() {
       animate={{ opacity: 1, y: 0 }}
       transition={{ delay: 0.4, duration: 0.8 }}
     >
-      <Card className="mx-auto max-w-4xl border-0 bg-background/80 p-6 shadow-2xl backdrop-blur-xl">
+      <Card className="mx-auto max-w-4xl border border-white/10 bg-white p-5 shadow-2xl md:p-6">
         <div className="grid gap-4 md:grid-cols-4">
           <div className="md:col-span-2">
             <Input

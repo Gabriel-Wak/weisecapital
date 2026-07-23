@@ -2,6 +2,7 @@ import { redirect } from "next/navigation";
 import { headers } from "next/headers";
 import { Navbar } from "@/components/public/navbar";
 import { Footer } from "@/components/public/footer";
+import { WhatsAppFloat } from "@/components/public/whatsapp-float";
 import { SmoothScrollProvider } from "@/providers/smooth-scroll-provider";
 import { getDefaultTenant } from "@/lib/tenant";
 
@@ -29,6 +30,7 @@ export default async function PublicLayout({
       <Navbar />
       <main className="flex-1">{children}</main>
       <Footer />
+      <WhatsAppFloat />
     </SmoothScrollProvider>
   );
 }

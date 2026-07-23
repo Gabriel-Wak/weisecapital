@@ -39,7 +39,9 @@ export function formatPhone(phone: string): string {
 
 export function getWhatsAppLink(phone: string, message?: string): string {
   const cleaned = phone.replace(/\D/g, "");
-  const fullNumber = cleaned.startsWith("55") ? cleaned : `55${cleaned}`;
+  // Aceita URL completa (wa.me/...) ou só o número
+  const digits = cleaned.length >= 10 ? cleaned : phone.replace(/\D/g, "");
+  const fullNumber = digits.startsWith("55") ? digits : `55${digits}`;
   const encodedMessage = message ? `?text=${encodeURIComponent(message)}` : "";
   return `https://wa.me/${fullNumber}${encodedMessage}`;
 }

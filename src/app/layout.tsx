@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { Inter } from "next/font/google";
+import { Montserrat, Source_Sans_3 } from "next/font/google";
 import { Toaster } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryProvider } from "@/providers/query-provider";
@@ -9,9 +9,16 @@ import { generateSEO } from "@/lib/seo";
 import { getDefaultTenant } from "@/lib/tenant";
 import "./globals.css";
 
-const inter = Inter({
+const sourceSans = Source_Sans_3({
   subsets: ["latin"],
   variable: "--font-sans",
+  display: "swap",
+});
+
+const montserrat = Montserrat({
+  subsets: ["latin"],
+  variable: "--font-heading",
+  display: "swap",
 });
 
 export const metadata: Metadata = generateSEO({});
@@ -24,7 +31,11 @@ export default async function RootLayout({
   const tenant = await getDefaultTenant();
 
   return (
-    <html lang="pt-BR" className={`${inter.variable} h-full antialiased`} suppressHydrationWarning>
+    <html
+      lang="pt-BR"
+      className={`${sourceSans.variable} ${montserrat.variable} h-full antialiased`}
+      suppressHydrationWarning
+    >
       <head>
         <AnalyticsScripts
           googleAnalytics={tenant?.googleAnalytics}
@@ -32,7 +43,7 @@ export default async function RootLayout({
           googleTagManager={tenant?.googleTagManager}
         />
       </head>
-      <body className="min-h-full flex flex-col font-sans">
+      <body className="flex min-h-full flex-col font-sans">
         <ThemeProvider>
           <QueryProvider>
             <TooltipProvider>

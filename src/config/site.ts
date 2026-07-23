@@ -1,8 +1,8 @@
 export const siteConfig = {
-  name: process.env.NEXT_PUBLIC_APP_NAME ?? "Weise Capital Imóveis",
+  name: process.env.NEXT_PUBLIC_APP_NAME ?? "Weise Capital",
   url: process.env.NEXT_PUBLIC_APP_URL ?? "http://localhost:3000",
   description:
-    "Plataforma imobiliária premium para compra, venda e locação de imóveis de alto padrão.",
+    "Imobiliária especialista em venda e locação com atendimento próximo e curadoria de boas localizações.",
   keywords: [
     "imóveis",
     "apartamentos",
@@ -11,10 +11,13 @@ export const siteConfig = {
     "locação",
     "imobiliária",
     "empreendimentos",
+    "Weise Capital",
   ],
+  /** Número E.164 sem + (Brasil). Atualize para o WhatsApp real da imobiliária. */
+  whatsappPhone: process.env.NEXT_PUBLIC_WHATSAPP_PHONE ?? "5511999999999",
   links: {
-    whatsapp: "https://wa.me/5511999999999",
-    instagram: "https://instagram.com",
+    whatsapp: `https://wa.me/${process.env.NEXT_PUBLIC_WHATSAPP_PHONE ?? "5511999999999"}`,
+    instagram: "https://www.instagram.com/weisecapital/",
     facebook: "https://facebook.com",
     linkedin: "https://linkedin.com",
   },
@@ -39,12 +42,10 @@ export const adminNav = [
 ] as const;
 
 export const publicNav = [
-  { title: "Home", href: "/" },
-  { title: "Sobre", href: "/sobre" },
-  { title: "Empreendimentos", href: "/empreendimentos" },
   { title: "Imóveis", href: "/imoveis" },
   { title: "Venda", href: "/imoveis?purpose=SALE" },
   { title: "Locação", href: "/imoveis?purpose=RENT" },
-  { title: "Blog", href: "/blog" },
+  { title: "Empreendimentos", href: "/empreendimentos" },
+  { title: "Sobre", href: "/sobre" },
   { title: "Contato", href: "/contato" },
 ] as const;

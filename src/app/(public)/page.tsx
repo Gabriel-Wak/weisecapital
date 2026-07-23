@@ -1,16 +1,16 @@
 import { HeroSection } from "@/components/public/hero-section";
 import { PropertyCard } from "@/components/public/property-card";
 import { FadeIn, StaggerContainer, StaggerItem } from "@/components/animations/fade-in";
-import { AnimatedCounter } from "@/components/animations/animated-counter";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import Link from "next/link";
-import { ArrowRight, Star, Building2, Users, Award } from "lucide-react";
+import { ArrowRight, MessageCircle, Star } from "lucide-react";
 import { propertyService } from "@/services/property.service";
 import { developmentRepository } from "@/repositories/development.repository";
 import { siteConfig } from "@/config/site";
 import prisma from "@/lib/prisma";
 import { generateSEO, generateOrganizationJsonLd } from "@/lib/seo";
+import { getWhatsAppLink } from "@/lib/utils/format";
 
 export const dynamic = "force-dynamic";
 
@@ -24,7 +24,7 @@ async function getHomeData() {
 
   if (!tenant) return null;
 
-  const [featured, launches, developments, testimonials, partners] =
+  const [featured, launches, developments, testimonials, propertyCount] =
     await Promise.all([
       propertyService.getFeatured(tenantSlug),
       propertyService.getLaunches(tenantSlug),
@@ -34,24 +34,20 @@ async function getHomeData() {
         orderBy: { order: "asc" },
         take: 6,
       }),
-      prisma.partner.findMany({
-        where: { tenantId: tenant.id, isActive: true },
-        orderBy: { order: "asc" },
+      prisma.property.count({
+        where: { tenantId: tenant.id, deletedAt: null, status: "AVAILABLE" },
       }),
     ]);
 
-  return { featured, launches, developments, testimonials, partners };
+  return { featured, launches, developments, testimonials, propertyCount };
 }
 
 export default async function HomePage() {
   const data = await getHomeData();
-
-  const stats = [
-    { label: "Imóveis", value: 500, suffix: "+", icon: Building2 },
-    { label: "Clientes", value: 1200, suffix: "+", icon: Users },
-    { label: "Anos", value: 15, suffix: "+", icon: Award },
-    { label: "Avaliação", value: 4.9, suffix: "", icon: Star },
-  ];
+  const whatsappHref = getWhatsAppLink(
+    siteConfig.whatsappPhone,
+    "Olá! Quero atendimento da Weise Capital para comprar ou alugar."
+  );
 
   return (
     <>
@@ -64,43 +60,56 @@ export default async function HomePage() {
 
       <HeroSection />
 
-      {/* Stats */}
-      <section className="border-y bg-muted/30 py-16">
-        <div className="mx-auto grid max-w-7xl grid-cols-2 gap-8 px-6 md:grid-cols-4 lg:px-8">
-          {stats.map((stat, i) => (
-            <FadeIn key={stat.label} delay={i * 0.1}>
-              <div className="text-center">
-                <stat.icon className="mx-auto mb-3 h-8 w-8 text-primary" />
-                <div className="text-3xl font-bold tracking-tight md:text-4xl">
-                  <AnimatedCounter
-                    value={stat.value}
-                    suffix={stat.suffix}
-                  />
-                </div>
-                <p className="mt-1 text-sm text-muted-foreground">
-                  {stat.label}
-                </p>
-              </div>
-            </FadeIn>
-          ))}
+      {/* Proof strip — only real catalog count */}
+      <section className="border-b bg-card">
+        <div className="mx-auto flex max-w-7xl flex-col gap-4 px-5 py-8 sm:flex-row sm:items-center sm:justify-between lg:px-8">
+          <p className="text-sm text-muted-foreground">
+            {data?.propertyCount ? (
+              <>
+                <span className="font-semibold text-foreground">
+                  {data.propertyCount} imóveis
+                </span>{" "}
+                disponíveis no catálogo agora
+              </>
+            ) : (
+              "Atendimento em venda e locação com foco em boa localização"
+            )}
+          </p>
+          <div className="flex flex-wrap gap-2">
+            <Button variant="outline" size="sm" asChild>
+              <Link href="/imoveis?purpose=SALE">Comprar</Link>
+            </Button>
+            <Button variant="outline" size="sm" asChild>
+              <Link href="/imoveis?purpose=RENT">Alugar</Link>
+            </Button>
+            <Button
+              size="sm"
+              className="bg-whatsapp text-whatsapp-foreground hover:bg-whatsapp/90"
+              asChild
+            >
+              <a href={whatsappHref} target="_blank" rel="noopener noreferrer">
+                <MessageCircle className="mr-1.5 h-3.5 w-3.5" />
+                Falar no Zap
+              </a>
+            </Button>
+          </div>
         </div>
       </section>
 
-      {/* Featured Properties */}
       {data?.featured && data.featured.length > 0 && (
-        <section className="py-24">
-          <div className="mx-auto max-w-7xl px-6 lg:px-8">
+        <section className="py-20 md:py-24">
+          <div className="mx-auto max-w-7xl px-5 lg:px-8">
             <FadeIn>
-              <div className="mb-12 flex items-end justify-between">
+              <div className="mb-10 flex items-end justify-between gap-4">
                 <div>
-                  <p className="text-sm font-medium tracking-wider text-primary uppercase">
-                    Destaques
+                  <p className="text-xs font-semibold tracking-[0.18em] text-primary uppercase">
+                    Seleção
                   </p>
-                  <h2 className="mt-2 text-3xl font-bold tracking-tight md:text-4xl">
-                    Imóveis em Destaque
+                  <h2 className="font-heading mt-2 text-3xl font-semibold tracking-tight md:text-4xl">
+                    Imóveis em destaque
                   </h2>
                 </div>
-                <Button variant="ghost" asChild className="hidden md:flex">
+                <Button variant="ghost" asChild className="hidden shrink-0 md:flex">
                   <Link href="/imoveis">
                     Ver todos <ArrowRight className="ml-2 h-4 w-4" />
                   </Link>
@@ -116,17 +125,16 @@ export default async function HomePage() {
         </section>
       )}
 
-      {/* Launches */}
       {data?.launches && data.launches.length > 0 && (
-        <section className="bg-muted/30 py-24">
-          <div className="mx-auto max-w-7xl px-6 lg:px-8">
+        <section className="border-y bg-muted/40 py-20 md:py-24">
+          <div className="mx-auto max-w-7xl px-5 lg:px-8">
             <FadeIn>
-              <div className="mb-12 text-center">
-                <p className="text-sm font-medium tracking-wider text-primary uppercase">
+              <div className="mb-10">
+                <p className="text-xs font-semibold tracking-[0.18em] text-primary uppercase">
                   Lançamentos
                 </p>
-                <h2 className="mt-2 text-3xl font-bold tracking-tight md:text-4xl">
-                  Novos Lançamentos
+                <h2 className="font-heading mt-2 text-3xl font-semibold tracking-tight md:text-4xl">
+                  Novidades no mercado
                 </h2>
               </div>
             </FadeIn>
@@ -139,18 +147,17 @@ export default async function HomePage() {
         </section>
       )}
 
-      {/* Developments */}
       {data?.developments && data.developments.length > 0 && (
-        <section className="py-24">
-          <div className="mx-auto max-w-7xl px-6 lg:px-8">
+        <section className="py-20 md:py-24">
+          <div className="mx-auto max-w-7xl px-5 lg:px-8">
             <FadeIn>
-              <div className="mb-12 flex items-end justify-between">
+              <div className="mb-10 flex items-end justify-between gap-4">
                 <div>
-                  <p className="text-sm font-medium tracking-wider text-primary uppercase">
+                  <p className="text-xs font-semibold tracking-[0.18em] text-primary uppercase">
                     Empreendimentos
                   </p>
-                  <h2 className="mt-2 text-3xl font-bold tracking-tight md:text-4xl">
-                    Projetos Exclusivos
+                  <h2 className="font-heading mt-2 text-3xl font-semibold tracking-tight md:text-4xl">
+                    Projetos para investir ou morar
                   </h2>
                 </div>
                 <Button variant="ghost" asChild className="hidden md:flex">
@@ -160,23 +167,21 @@ export default async function HomePage() {
                 </Button>
               </div>
             </FadeIn>
-            <StaggerContainer className="grid gap-6 md:grid-cols-2">
+            <StaggerContainer className="grid gap-5 md:grid-cols-2">
               {data.developments.map((dev) => (
                 <StaggerItem key={dev.id}>
                   <Link href={`/empreendimentos/${dev.slug}`}>
-                    <Card className="group overflow-hidden border-0 shadow-sm transition-all hover:shadow-xl">
-                      <div className="p-8">
-                        <p className="text-xs font-medium tracking-wider text-muted-foreground uppercase">
-                          {dev.builder ?? "Empreendimento"}
-                        </p>
-                        <h3 className="mt-2 text-2xl font-bold tracking-tight transition-colors group-hover:text-primary">
-                          {dev.name}
-                        </h3>
-                        <p className="mt-2 text-muted-foreground">
-                          {dev.neighborhood}, {dev.city}
-                        </p>
-                      </div>
-                    </Card>
+                    <div className="group border border-border/80 bg-card p-7 transition-colors hover:border-primary/30">
+                      <p className="text-xs font-medium tracking-wider text-muted-foreground uppercase">
+                        {dev.builder ?? "Empreendimento"}
+                      </p>
+                      <h3 className="font-heading mt-2 text-2xl font-semibold tracking-tight transition-colors group-hover:text-primary">
+                        {dev.name}
+                      </h3>
+                      <p className="mt-2 text-sm text-muted-foreground">
+                        {dev.neighborhood}, {dev.city}
+                      </p>
+                    </div>
                   </Link>
                 </StaggerItem>
               ))}
@@ -185,34 +190,33 @@ export default async function HomePage() {
         </section>
       )}
 
-      {/* Testimonials */}
       {data?.testimonials && data.testimonials.length > 0 && (
-        <section className="bg-muted/30 py-24">
-          <div className="mx-auto max-w-7xl px-6 lg:px-8">
+        <section className="border-t bg-muted/30 py-20 md:py-24">
+          <div className="mx-auto max-w-7xl px-5 lg:px-8">
             <FadeIn>
-              <div className="mb-12 text-center">
-                <h2 className="text-3xl font-bold tracking-tight md:text-4xl">
-                  O que nossos clientes dizem
-                </h2>
-              </div>
+              <h2 className="font-heading mb-10 text-3xl font-semibold tracking-tight md:text-4xl">
+                Quem já fechou conosco
+              </h2>
             </FadeIn>
-            <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+            <div className="grid gap-5 md:grid-cols-2 lg:grid-cols-3">
               {data.testimonials.map((t, i) => (
-                <FadeIn key={t.id} delay={i * 0.1}>
-                  <Card className="border-0 p-6 shadow-sm">
-                    <div className="mb-4 flex gap-1">
+                <FadeIn key={t.id} delay={i * 0.08}>
+                  <Card className="h-full border-border/70 p-6 shadow-none">
+                    <div className="mb-3 flex gap-0.5">
                       {Array.from({ length: t.rating }).map((_, j) => (
                         <Star
                           key={j}
-                          className="h-4 w-4 fill-primary text-primary"
+                          className="h-3.5 w-3.5 fill-primary text-primary"
                         />
                       ))}
                     </div>
-                    <p className="text-muted-foreground">&ldquo;{t.content}&rdquo;</p>
-                    <div className="mt-4">
-                      <p className="font-semibold">{t.name}</p>
+                    <p className="text-sm leading-relaxed text-muted-foreground">
+                      &ldquo;{t.content}&rdquo;
+                    </p>
+                    <div className="mt-5">
+                      <p className="text-sm font-semibold">{t.name}</p>
                       {t.role && (
-                        <p className="text-sm text-muted-foreground">{t.role}</p>
+                        <p className="text-xs text-muted-foreground">{t.role}</p>
                       )}
                     </div>
                   </Card>
@@ -223,35 +227,38 @@ export default async function HomePage() {
         </section>
       )}
 
-      {/* CTA */}
-      <section className="py-24">
-        <div className="mx-auto max-w-7xl px-6 lg:px-8">
+      <section className="py-20 md:py-24">
+        <div className="mx-auto max-w-7xl px-5 lg:px-8">
           <FadeIn>
-            <Card className="relative overflow-hidden border-0 bg-primary p-12 text-center text-primary-foreground md:p-16">
-              <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_right,_rgba(255,255,255,0.1),_transparent)]" />
-              <div className="relative">
-                <h2 className="text-3xl font-bold tracking-tight md:text-4xl">
-                  Pronto para encontrar seu imóvel?
-                </h2>
-                <p className="mx-auto mt-4 max-w-xl text-primary-foreground/80">
-                  Nossa equipe de especialistas está pronta para ajudá-lo a
-                  encontrar o imóvel perfeito.
-                </p>
-                <div className="mt-8 flex flex-wrap justify-center gap-4">
-                  <Button size="lg" variant="secondary" asChild>
-                    <Link href="/contato">Fale Conosco</Link>
-                  </Button>
-                  <Button
-                    size="lg"
-                    variant="outline"
-                    className="border-primary-foreground/20 bg-transparent text-primary-foreground hover:bg-primary-foreground/10"
-                    asChild
-                  >
-                    <Link href="/imoveis">Ver Imóveis</Link>
-                  </Button>
-                </div>
+            <div className="bg-primary px-8 py-14 text-center text-primary-foreground md:px-16 md:py-16">
+              <h2 className="font-heading text-3xl font-semibold tracking-tight md:text-4xl">
+                Quer um orçamento ou visita?
+              </h2>
+              <p className="mx-auto mt-4 max-w-lg text-sm leading-relaxed text-primary-foreground/75 md:text-base">
+                Chame no WhatsApp com o que você busca — bairro, orçamento e
+                prazo. Respondemos com opções reais.
+              </p>
+              <div className="mt-8 flex flex-wrap justify-center gap-3">
+                <Button
+                  size="lg"
+                  className="bg-whatsapp text-whatsapp-foreground hover:bg-whatsapp/90"
+                  asChild
+                >
+                  <a href={whatsappHref} target="_blank" rel="noopener noreferrer">
+                    <MessageCircle className="mr-2 h-4 w-4" />
+                    WhatsApp agora
+                  </a>
+                </Button>
+                <Button
+                  size="lg"
+                  variant="outline"
+                  className="border-primary-foreground/25 bg-transparent text-primary-foreground hover:bg-primary-foreground/10"
+                  asChild
+                >
+                  <Link href="/contato">Agendar visita</Link>
+                </Button>
               </div>
-            </Card>
+            </div>
           </FadeIn>
         </div>
       </section>
