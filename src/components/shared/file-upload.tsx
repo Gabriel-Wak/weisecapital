@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { useDropzone } from "react-dropzone";
 import { Upload, X, Image as ImageIcon } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -12,6 +12,29 @@ interface FileUploadProps {
   onUpload: (files: File[]) => void;
   maxFiles?: number;
   className?: string;
+}
+
+function FilePreview({ file }: { file: File }) {
+  const [src, setSrc] = useState<string | null>(null);
+
+  useEffect(() => {
+    const url = URL.createObjectURL(file);
+    setSrc(url);
+    return () => URL.revokeObjectURL(url);
+  }, [file]);
+
+  if (!src) {
+    return (
+      <div className="flex h-full items-center justify-center bg-muted">
+        <ImageIcon className="h-8 w-8 text-muted-foreground" />
+      </div>
+    );
+  }
+
+  return (
+    // eslint-disable-next-line @next/next/no-img-element
+    <img src={src} alt={file.name} className="h-full w-full object-cover" />
+  );
 }
 
 export function FileUpload({
@@ -81,10 +104,11 @@ export function FileUpload({
       {files.length > 0 && (
         <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
           {files.map((file, i) => (
-            <div key={i} className="group relative aspect-square overflow-hidden rounded-lg border">
-              <div className="flex h-full items-center justify-center bg-muted">
-                <ImageIcon className="h-8 w-8 text-muted-foreground" />
-              </div>
+            <div
+              key={`${file.name}-${file.size}-${i}`}
+              className="group relative aspect-square overflow-hidden rounded-lg border"
+            >
+              <FilePreview file={file} />
               <div className="absolute inset-x-0 bottom-0 bg-background/80 p-1">
                 <p className="truncate text-xs">{file.name}</p>
               </div>

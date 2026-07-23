@@ -65,7 +65,7 @@ export function HeroSection({ banners = [] }: { banners?: HeroBannerData[] }) {
             "absolute inset-0 z-[1] bg-cover bg-center bg-no-repeat transition-opacity duration-700 ease-out",
             i === index ? "opacity-100" : "pointer-events-none opacity-0"
           )}
-          style={{ backgroundImage: `url("${banner.imageDesktop}")` }}
+          style={{ backgroundImage: `url(${banner.imageDesktop})` }}
           role="img"
           aria-label={banner.title}
           aria-hidden={i !== index}

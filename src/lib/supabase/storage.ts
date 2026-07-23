@@ -16,7 +16,12 @@ export async function uploadToStorage(
   const supabase = createStorageClient();
   const bucket = "media";
 
-  const { error } = await supabase.storage.from(bucket).upload(path, file, {
+  // Always send Blob/Uint8Array — passing Node Buffer can be stringified as
+  // UTF-8 by storage-js, corrupting binary (U+FFFD / ef bf bd in the file).
+  const bytes = new Uint8Array(file);
+  const body = new Blob([bytes], { type: contentType });
+
+  const { error } = await supabase.storage.from(bucket).upload(path, body, {
     contentType,
     upsert: true,
   });

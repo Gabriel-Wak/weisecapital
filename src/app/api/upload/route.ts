@@ -25,6 +25,11 @@ export async function POST(request: Request) {
       .webp({ quality: 85 })
       .toBuffer();
 
+    // Guard against binary corruption before we hit storage
+    if (webp.subarray(0, 4).toString() !== "RIFF" || webp.subarray(8, 12).toString() !== "WEBP") {
+      return NextResponse.json({ error: "Falha ao gerar WebP válido" }, { status: 500 });
+    }
+
     const filename = `${folder}/${session.tenantId}/${nanoid()}.webp`;
     const { url, path } = await uploadToStorage(webp, filename, "image/webp");
 
