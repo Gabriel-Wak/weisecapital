@@ -61,8 +61,22 @@ export async function createDevelopment(
       tenant: { connect: { id: session.tenantId } },
     });
 
+    const imageUrls = formData.getAll("imageUrls") as string[];
+    if (imageUrls.length > 0) {
+      await prisma.media.createMany({
+        data: imageUrls.map((url, i) => ({
+          url,
+          type: "IMAGE",
+          mimeType: "image/webp",
+          order: i,
+          developmentId: dev.id,
+        })),
+      });
+    }
+
     revalidatePath("/admin/empreendimentos");
     revalidatePath("/empreendimentos");
+    revalidatePath("/");
     return { success: true, data: { id: dev.id } };
   } catch (error) {
     return {

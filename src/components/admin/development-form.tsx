@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useTransition } from "react";
+import { useRef, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { useForm, type Resolver } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -19,6 +19,7 @@ import {
 import { Switch } from "@/components/ui/switch";
 import { Card } from "@/components/ui/card";
 import { PageHeader } from "@/components/shared/design-system";
+import { FileUpload } from "@/components/shared/file-upload";
 import { createDevelopment } from "@/actions/development.actions";
 import { toast } from "sonner";
 
@@ -42,16 +43,44 @@ type FormInput = z.infer<typeof schema>;
 export function DevelopmentForm() {
   const router = useRouter();
   const [isPending, startTransition] = useTransition();
+  const [imageUrls, setImageUrls] = useState<string[]>([]);
+  const [uploading, setUploading] = useState(false);
+  const uploadedFilesRef = useRef(0);
   const { register, handleSubmit, setValue, watch } = useForm<FormInput>({
     resolver: zodResolver(schema) as Resolver<FormInput>,
     defaultValues: { status: "PLANNING", isFeatured: false },
   });
+
+  async function handleUpload(files: File[]) {
+    const newFiles = files.slice(uploadedFilesRef.current);
+    if (!newFiles.length) return;
+    setUploading(true);
+    try {
+      const urls: string[] = [];
+      for (const file of newFiles) {
+        const fd = new FormData();
+        fd.append("file", file);
+        fd.append("folder", "developments");
+        const res = await fetch("/api/upload", { method: "POST", body: fd });
+        const data = await res.json();
+        if (data.url) urls.push(data.url);
+      }
+      uploadedFilesRef.current = files.length;
+      setImageUrls((prev) => [...prev, ...urls]);
+      if (urls.length) toast.success("Imagem enviada!");
+    } catch {
+      toast.error("Erro no upload");
+    } finally {
+      setUploading(false);
+    }
+  }
 
   function onSubmit(data: FormInput) {
     const formData = new FormData();
     Object.entries(data).forEach(([k, v]) => {
       if (v !== undefined && v !== null) formData.append(k, String(v));
     });
+    imageUrls.forEach((url) => formData.append("imageUrls", url));
 
     startTransition(async () => {
       const result = await createDevelopment(formData);
@@ -72,6 +101,18 @@ export function DevelopmentForm() {
       />
       <form onSubmit={handleSubmit(onSubmit)}>
         <Card className="space-y-4 border-0 p-6 shadow-sm">
+          <div className="space-y-2">
+            <Label>Fotos</Label>
+            <FileUpload onUpload={handleUpload} maxFiles={8} />
+            {uploading && (
+              <p className="text-xs text-muted-foreground">Enviando imagens...</p>
+            )}
+            {imageUrls.length > 0 && (
+              <p className="text-xs text-muted-foreground">
+                {imageUrls.length} imagem(ns) pronta(s)
+              </p>
+            )}
+          </div>
           <div className="grid gap-4 sm:grid-cols-2">
             <div className="space-y-2 sm:col-span-2">
               <Label>Nome</Label>
@@ -133,7 +174,7 @@ export function DevelopmentForm() {
           <Button type="button" variant="outline" onClick={() => router.back()}>
             Cancelar
           </Button>
-          <Button type="submit" disabled={isPending}>
+          <Button type="submit" disabled={isPending || uploading}>
             {isPending ? "Salvando..." : "Salvar"}
           </Button>
         </div>

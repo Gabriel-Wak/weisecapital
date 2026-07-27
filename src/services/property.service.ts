@@ -34,6 +34,13 @@ export class PropertyService {
     return toPropertyCardDataList(properties);
   }
 
+  async getAvailable(tenantSlug: string, limit = 6) {
+    const tenant = await tenantRepository.findBySlug(tenantSlug);
+    if (!tenant) return [];
+    const properties = await propertyRepository.getAvailable(tenant.id, limit);
+    return toPropertyCardDataList(properties);
+  }
+
   async getLaunches(tenantSlug: string) {
     const tenant = await tenantRepository.findBySlug(tenantSlug);
     if (!tenant) return [];

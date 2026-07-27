@@ -135,6 +135,15 @@ export class PropertyRepository {
     });
   }
 
+  async getAvailable(tenantId: string, limit = 6) {
+    return prisma.property.findMany({
+      where: { tenantId, deletedAt: null, status: "AVAILABLE" },
+      include: { media: { orderBy: { order: "asc" }, take: 1 } },
+      take: limit,
+      orderBy: [{ isFeatured: "desc" }, { createdAt: "desc" }],
+    });
+  }
+
   async getLaunches(tenantId: string, limit = 6) {
     return prisma.property.findMany({
       where: { tenantId, isLaunch: true, deletedAt: null },
